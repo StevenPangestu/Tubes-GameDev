@@ -3,20 +3,16 @@ using UnityEngine;
 public class FollowPlayer : MonoBehaviour
 {
     public GameObject player;
-    // Start is called once before the first execution of Update after the MonoBehaviour is created
-    void Start()
-    {
-        
-    }
+    public float xOffset = 7f;
+    public float smoothSpeed = 5f;
 
-    // Update is called once per frame
     void Update()
     {
-        // Check if the player object is assigned
         if (player != null)
         {
-            // Move the camera to follow the player
-            transform.position = new Vector3(player.transform.position.x + 7, player.transform.position.y + 2.3f, transform.position.z);
+            float targetX = player.transform.position.x + xOffset;
+            Vector3 targetPosition = new Vector3(targetX, transform.position.y, transform.position.z);
+            transform.position = Vector3.Lerp(transform.position, targetPosition, smoothSpeed * Time.deltaTime);
         }
     }
 }

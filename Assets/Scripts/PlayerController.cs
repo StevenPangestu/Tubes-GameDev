@@ -49,6 +49,8 @@ public class PlayerController : MonoBehaviour
         if (Input.GetMouseButtonDown(0))
         {
             BulletShot();
+            AudioManager audioManager = FindObjectOfType<AudioManager>();
+            audioManager.playSFX(audioManager.shoot);
         }
 
 
