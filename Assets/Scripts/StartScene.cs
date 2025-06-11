@@ -1,27 +1,17 @@
 using UnityEngine;
-using UnityEngine.UI;
-using TMPro;
+
 using UnityEngine.SceneManagement;
-using UnityEditor;
+
 public class StartScene : MonoBehaviour
 {
-    public TMP_Text text;
-    public Button playButton;
-    public Button exitButton;
-
-    void Start()
+    private bool keyPressed = false;
+    
+    private void Update()
     {
-        playButton.onClick.AddListener(() =>
+        if (Input.anyKeyDown && !keyPressed)
         {
-            text.text = "Loading...";
-            SceneManager.LoadScene(0);
-        });
-
-        exitButton.onClick.AddListener(() =>
-        {
-            text.text = "Exiting...";
-            EditorApplication.isPlaying = false;
-            Application.Quit();
-        });
+            keyPressed = true; 
+            SceneManager.LoadScene(0); 
+        }
     }
 }

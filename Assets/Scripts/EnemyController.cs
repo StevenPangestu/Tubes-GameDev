@@ -7,10 +7,17 @@ public class EnemyController : MonoBehaviour
     public GameObject bulletPrefab;
     public float moveSpeed = 5f;
     private int health = 3;
-
+    public Sprite aimForwardSprite;
+    public Sprite aimUpSprite;
+    public Sprite aimDownSprite;
+    private Animator animator;
+    private SpriteRenderer spriteRenderer;
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
     {
+
+        spriteRenderer = GetComponent<SpriteRenderer>();
+        animator = GetComponent<Animator>(); 
         enemyCount++;
         InvokeRepeating("EnemyShoot", Random.Range(1f, 5f), Random.Range(1f, 8f)); // Call EnemyShoot every second
     }
@@ -18,8 +25,41 @@ public class EnemyController : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
+        UpdateAimingAnimation();
+    }
+    void UpdateAimingAnimation()
+    {
+      
+        GameObject player = GameObject.FindGameObjectWithTag("Player");
+        if (player == null) return;
+        float yTolerance = 2f;
+        float yDifference = player.transform.position.y - transform.position.y;
+
+        if (yDifference > yTolerance)
+        {
+            spriteRenderer.sprite = aimUpSprite;
+        }
+        else if (yDifference < -yTolerance)
+        {
+            spriteRenderer.sprite = aimDownSprite;
+        }
+        else
+        {
+            spriteRenderer.sprite = aimForwardSprite;
+        }
+
+        // Tambahkan ini jika ingin flip saat musuh menghadap ke kanan atau kiri
+        if (player.transform.position.x > transform.position.x)
+        {
+            transform.localScale = new Vector3(-1.5f, 1.5f, 1);
+        }
+        else
+        {
+            transform.localScale = new Vector3(1.5f, 1.5f, 1);
+        }
 
     }
+
     void OnDestroy()
     {
         if (enemyCount > 0)
@@ -34,18 +74,20 @@ public class EnemyController : MonoBehaviour
         float distanceToPlayer = Vector3.Distance(transform.position, player.transform.position);
         if (distanceToPlayer > 16f)
         {
-            return; // Don't shoot if the player is too far away
+            return;
         }
-        //get the shoot direction according the player position
+
         Vector3 playerPosition = player.transform.position;
         Vector3 shootDirection = (playerPosition - transform.position).normalized;
 
-        // Calculate spawn position with a gap of 1.5f in the shoot direction
         Vector3 spawnPosition = transform.position + shootDirection * 1.5f;
 
         GameObject bullet = Instantiate(bulletPrefab, spawnPosition, Quaternion.identity);
 
         EnemyBullet enemyBullet = bullet.GetComponent<EnemyBullet>();
+        //set the animation up
+
+
         if (enemyBullet != null)
         {
             enemyBullet.SetDirection(shootDirection);
@@ -60,7 +102,8 @@ public class EnemyController : MonoBehaviour
         if (health <= 0)
         {
             Debug.Log("Enemy is dead");
-            Destroy(gameObject);
+            animator.SetBool("isDead", true);
+            Destroy(gameObject, 1.25f);
         }
 
     }

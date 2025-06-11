@@ -35,7 +35,7 @@ public class PlayerController : MonoBehaviour
 
         Vector3 mousePos = Camera.main.ScreenToWorldPoint(Input.mousePosition);
         Vector2 aimDirection = (mousePos - transform.position).normalized;
-
+        
         if (mousePos.x > transform.position.x)
         {
             transform.localScale = new Vector3(0.3f, 0.3f, 1);
@@ -121,7 +121,9 @@ public class PlayerController : MonoBehaviour
         if (health <= 0)
         {
             Debug.Log("Player is dead");
-            Destroy(gameObject);
+            animator.SetBool("isDead", true);
+            Destroy(gameObject, 1f);
+            gameController.showFailed();
         }
     }
     void Heal()
