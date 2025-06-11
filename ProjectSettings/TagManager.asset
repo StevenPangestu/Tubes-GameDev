@@ -5,10 +5,17 @@ TagManager:
   serializedVersion: 3
   tags:
   - Ground
-  - leftWall
-  - rightWall
   - Enemy
   - PlayerBullet
+  - Barrier
+  - Portal
+  - TextStage
+  - EnemyBullet
+  - HealPotion
+  - GrenadeOwned
+  - GrenadeOwnedImage
+  - Grenade
+  - GrenadeSpawn
   layers:
   - Default
   - TransparentFX

@@ -3,51 +3,70 @@ using UnityEngine;
 public class BulletForward : MonoBehaviour
 {
     [SerializeField] private float speed = 10f;
-    private Vector3 direction = Vector3.right; // Default direction to the right
-    Animator animator;
-
+    private Vector3 direction; // Default direction
+    private Animator BulletAnimator;
     private bool isHit = false;
-    // Start is called once before the first execution of Update after the MonoBehaviour is created
+    private bool isHitBarrier = false;
+    private Vector3 startPosition;
+    [SerializeField] private float maxRange = 14f;
+    //private Rrigidbody2D rb;
+
     void Start()
     {
-        animator = GetComponent<Animator>();
+        //rb = GetComponent<Rigidbody2D>();
+        BulletAnimator = GetComponent<Animator>();
+        startPosition = transform.position;
     }
 
     public void SetDirection(Vector3 dir)
     {
         direction = dir.normalized;
+
+        float angle = Mathf.Atan2(direction.y, direction.x) * Mathf.Rad2Deg;
+        transform.rotation = Quaternion.Euler(0f, 0f, angle);
+
+        //rb.linearVelocity = direction * speed;
     }
-    // Update is called once per frame
+
     void Update()
     {
 
+        if (!isHit)
+        {
+            transform.Translate(direction * speed * Time.deltaTime, Space.World);
 
-        transform.Translate(direction * speed * Time.deltaTime);
+            float distanceTravelled = Vector3.Distance(startPosition, transform.position);
+            if (distanceTravelled >= maxRange)
+            {
+                TriggerHit(); // Bullet auto-destroys after exceeding range
+            }
+        }
 
-
-
-        if (!isHit && (transform.position.x > 9.0f || transform.position.x < -15.0f))
+        if (!isHit && isHitBarrier)
         {
             TriggerHit();
         }
     }
-    // private void FixedUpdate()
-    // {
 
-    // }
     private void TriggerHit()
     {
         isHit = true;
-        animator.SetBool("isHit", true);
+        BulletAnimator.SetBool("isHit", true);
         speed = 0f;
-        Destroy(gameObject,0.5f);
-     
+        Destroy(gameObject, 0.5f);
     }
+
     void OnCollisionEnter2D(Collision2D other)
     {
         if (!isHit && other.gameObject.CompareTag("Enemy"))
         {
-            Destroy(other.gameObject);
+            TriggerHit();
+            EnemyController enemyController = other.gameObject.GetComponent<EnemyController>();
+            enemyController.TakeDamage(1);
+        }
+        else if (!isHit && other.gameObject.CompareTag("Barrier"))
+        {
+            isHitBarrier = true;
             TriggerHit();
         }
     }
