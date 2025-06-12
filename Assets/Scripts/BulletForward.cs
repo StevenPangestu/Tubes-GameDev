@@ -69,5 +69,12 @@ public class BulletForward : MonoBehaviour
             isHitBarrier = true;
             TriggerHit();
         }
+        else if (!isHit && other.gameObject.CompareTag("Boss"))
+        {
+            TriggerHit();
+            BossScript bossController = other.gameObject.GetComponent<BossScript>();
+            bossController.TakeDamage(1);
+        }
+       
     }
 }

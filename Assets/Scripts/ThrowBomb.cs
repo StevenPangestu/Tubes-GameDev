@@ -16,6 +16,7 @@ public class ThrowBomb : MonoBehaviour
     void Start()
     {
         grenadeAnimator = GetComponent<Animator>();
+
     }
 
     public void SetDirection(Vector3 dir)
@@ -35,7 +36,7 @@ public class ThrowBomb : MonoBehaviour
         else if (!isHit)
         {
             // Auto-explode if time runs out
-             grenadeAnimator.SetBool("isBombHit", true); // Start hit/explosion animation
+            grenadeAnimator.SetBool("isBombHit", true); // Start hit/explosion animation
 
             TriggerHit();
         }
@@ -63,6 +64,8 @@ public class ThrowBomb : MonoBehaviour
     {
         // grenadeAnimator.SetBool("isBombHit", false); // Start hit/explosion animation
         Destroy(gameObject, 1.5f); // Destroy after a short delay
+        AudioManager audioManager = FindObjectOfType<AudioManager>();
+        audioManager.playSFX(audioManager.grenade);
         if (hasExploded) return;
         hasExploded = true;
 
@@ -77,6 +80,15 @@ public class ThrowBomb : MonoBehaviour
                     ec.TakeDamage(damage);
                 }
             }
+            else if (col.CompareTag("Boss"))
+            {
+                BossScript bc = col.GetComponent<BossScript>();
+                if (bc != null)
+                {
+                    bc.TakeDamage(damage);
+                }
+            }
+
         }
     }
 

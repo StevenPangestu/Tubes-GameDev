@@ -1,6 +1,7 @@
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
+using System.Collections;
 
 public class GameController : MonoBehaviour
 {
@@ -13,27 +14,97 @@ public class GameController : MonoBehaviour
     public int maxHealth = 5;
     private static int currentHealth;
     private static int grenadeOwned;
+    private BossScript boss;
+    private GameObject portal;
+    [SerializeField] private Button restartButton;
+    [SerializeField] private Button exitButton;
+    [SerializeField] private CanvasGroup restartCanvasGroup;
+    [SerializeField] private CanvasGroup exitCanvasGroup;
+    [SerializeField] private CanvasGroup darkOverlayCanvasGroup; // moved up here
+    [SerializeField] private float fadeDuration = 0.5f;
+    [SerializeField] private GameObject darkOverlay;
+
+    void Start()
+    {
+        restartButton.gameObject.SetActive(false);
+        exitButton.gameObject.SetActive(false);
+        darkOverlay.SetActive(false);
+
+        currentHealth = PlayerController.health;
+        StageText = GameObject.Find("TextStage").GetComponent<TextMeshProUGUI>();
+        GrenadeText = GameObject.Find("GrenadeText").GetComponent<TextMeshProUGUI>();
+        grenadeOwned = PlayerController.grenadeOwned;
+
+        GameObject bossObj = GameObject.FindWithTag("Boss");
+        if (bossObj != null)
+        {
+            boss = bossObj.GetComponent<BossScript>();
+        }
+        portal = GameObject.Find("Portal");
+
+        UpdateStageText();
+        UpdateHealth(currentHealth);
+        UpdateGrenade(grenadeOwned);
+    }
+
+    void Update()
+    {
+        if (boss != null && portal != null && boss.IsDead())
+        {
+            portal.SetActive(true);
+        }
+    }
+
+
+    public void showFailed()
+    {
+        darkOverlay.SetActive(true);
+
+        // Enable buttons before fading in their canvas groups
+        restartButton.gameObject.SetActive(true);
+        exitButton.gameObject.SetActive(true);
+
+        StartCoroutine(FadeIn(darkOverlayCanvasGroup));
+        StartCoroutine(FadeIn(restartCanvasGroup));
+        StartCoroutine(FadeIn(exitCanvasGroup));
+
+        restartButton.onClick.RemoveAllListeners(); // prevent duplicate listeners
+        restartButton.onClick.AddListener(() =>
+        {
+            restartCanvasGroup.interactable = false;
+            restartCanvasGroup.blocksRaycasts = false;
+            darkOverlayCanvasGroup.interactable = false;
+            darkOverlayCanvasGroup.blocksRaycasts = false;
+            // Reset health and grenade count
+            PlayerController.health = 5;
+            PlayerController.grenadeOwned = 0;
+            UpdateHealth(PlayerController.health);
+            UpdateGrenade(PlayerController.grenadeOwned);
+            UnityEngine.SceneManagement.SceneManager.LoadScene(0);
+        });
+
+        exitButton.onClick.RemoveAllListeners(); // prevent duplicate listeners
+        exitButton.onClick.AddListener(() =>
+        {
+            exitCanvasGroup.interactable = false;
+            exitCanvasGroup.blocksRaycasts = false;
+            darkOverlayCanvasGroup.interactable = false;
+            darkOverlayCanvasGroup.blocksRaycasts = false;
+            Application.Quit();
+        });
+    }
+
+    public void UpdateStageText()
+    {
+        StageText.text = "Stage: " + (ChangeStage.StageIndex + 1);
+    }
+
     public void UpdateHealth(int health)
     {
-        if (healthBar == null || healthBar.Length == 0)
-        {
-            Debug.LogError("healthBar not initialized!");
-            return;
-        }
-
-       
         for (int i = 0; i < healthBar.Length; i++)
         {
-            if (healthBar[i] == null)
-            {
-                Debug.LogError($"healthBar[{i}] is null!");
-                continue;
-            }
-
-            if (i < health)
-                healthBar[i].sprite = fullHealthSprite;
-            else
-                healthBar[i].sprite = emptyHealthSprite;
+            if (healthBar[i] == null) continue;
+            healthBar[i].sprite = i < health ? fullHealthSprite : emptyHealthSprite;
         }
     }
 
@@ -44,34 +115,30 @@ public class GameController : MonoBehaviour
             GrenadeText.text = "";
             GrenadeImage.enabled = false;
             grenadeOwned = 0;
-            return;
         }
-        grenadeOwned = grenadeCount;
-        GrenadeImage.enabled = true;
-        //GrenadeImage.sprite = Resources.Load<Sprite>("GrenadeIcon"); // Assuming you have a grenade icon in Resources folder
-    
-        GrenadeText.text = grenadeOwned.ToString();
-    }
-    void Start()
-    {
-        //get health from playercontroller
-        currentHealth = PlayerController.health;
-        StageText = GameObject.Find("TextStage").GetComponent<TextMeshProUGUI>();
-        GrenadeText = GameObject.Find("GrenadeText").GetComponent<TextMeshProUGUI>();
-        grenadeOwned = PlayerController.grenadeOwned;
-        Debug.Log(grenadeOwned);
-        UpdateStageText();
-        UpdateHealth(currentHealth);
-        UpdateGrenade(grenadeOwned);
+        else
+        {
+            grenadeOwned = grenadeCount;
+            GrenadeImage.enabled = true;
+            GrenadeText.text = grenadeOwned.ToString();
+        }
     }
 
-    void Update()
+    IEnumerator FadeIn(CanvasGroup canvasGroup)
     {
+        canvasGroup.gameObject.SetActive(true);
+        canvasGroup.alpha = 0f;
+        float elapsedTime = 0f;
 
-    }
-    //get variable from ChangeStage.cs
-    public void UpdateStageText()
-    {
-        StageText.text = "Stage: " + (ChangeStage.StageIndex + 1);
+        while (elapsedTime < fadeDuration)
+        {
+            elapsedTime += Time.deltaTime;
+            canvasGroup.alpha = Mathf.Clamp01(elapsedTime / fadeDuration);
+            yield return null;
+        }
+
+        canvasGroup.alpha = 1f;
+        canvasGroup.interactable = true;
+        canvasGroup.blocksRaycasts = true;
     }
 }

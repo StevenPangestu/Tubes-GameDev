@@ -11,7 +11,9 @@ public class AudioManager : MonoBehaviour
     public AudioClip shoot;
     public AudioClip death;
     public AudioClip grenade;
-
+    public AudioClip BossSlash;
+    public AudioClip BossCast;
+    public AudioClip BossDeath;
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
     {

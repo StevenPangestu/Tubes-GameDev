@@ -16,6 +16,7 @@ TagManager:
   - GrenadeOwnedImage
   - Grenade
   - GrenadeSpawn
+  - Boss
   layers:
   - Default
   - TransparentFX
