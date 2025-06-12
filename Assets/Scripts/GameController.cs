@@ -14,7 +14,8 @@ public class GameController : MonoBehaviour
     public int maxHealth = 5;
     private static int currentHealth;
     private static int grenadeOwned;
-
+    private BossScript boss;
+    private GameObject portal;
     [SerializeField] private Button restartButton;
     [SerializeField] private Button exitButton;
     [SerializeField] private CanvasGroup restartCanvasGroup;
@@ -34,12 +35,26 @@ public class GameController : MonoBehaviour
         GrenadeText = GameObject.Find("GrenadeText").GetComponent<TextMeshProUGUI>();
         grenadeOwned = PlayerController.grenadeOwned;
 
+        GameObject bossObj = GameObject.FindWithTag("Boss");
+        if (bossObj != null)
+        {
+            boss = bossObj.GetComponent<BossScript>();
+        }
+        portal = GameObject.Find("Portal");
+
         UpdateStageText();
         UpdateHealth(currentHealth);
         UpdateGrenade(grenadeOwned);
     }
 
-    void Update() { }
+    void Update()
+    {
+        if (boss != null && portal != null && boss.IsDead())
+        {
+            portal.SetActive(true);
+        }
+    }
+
 
     public void showFailed()
     {

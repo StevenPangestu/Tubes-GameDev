@@ -32,7 +32,7 @@ public class EnemyController : MonoBehaviour
       
         GameObject player = GameObject.FindGameObjectWithTag("Player");
         if (player == null) return;
-        float yTolerance = 2f;
+        float yTolerance = 1f;
         float yDifference = player.transform.position.y - transform.position.y;
 
         if (yDifference > yTolerance)

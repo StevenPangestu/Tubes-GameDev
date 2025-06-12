@@ -80,6 +80,15 @@ public class ThrowBomb : MonoBehaviour
                     ec.TakeDamage(damage);
                 }
             }
+            else if (col.CompareTag("Boss"))
+            {
+                BossScript bc = col.GetComponent<BossScript>();
+                if (bc != null)
+                {
+                    bc.TakeDamage(damage);
+                }
+            }
+
         }
     }
 
