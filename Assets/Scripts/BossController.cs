@@ -6,7 +6,7 @@ public class BossScript : MonoBehaviour
     private Animator animator;
     public bool isBossDead = false;
     private int health = 15;
-    private float attackCooldown = 4f;
+    private float attackCooldown = 2f;
     private float lastAttackTime = 0f;
     private float followDistance = 10f;
     private float stopDistance = 3f;
@@ -17,14 +17,14 @@ public class BossScript : MonoBehaviour
     private bool isAttacking = false;
     private enum AttackType { Melee, Ranged }
     private AttackType currentAttack;
-
+    public static int bossDefeated = 0;
     private GameObject player;
     private AudioManager audioManager;
     void Start()
     {
         animator = GetComponent<Animator>();
         player = GameObject.FindGameObjectWithTag("Player");
-        Debug.Log("BossScript started, player found: " + (player != null));
+
         audioManager = FindObjectOfType<AudioManager>();
 
     }
@@ -88,7 +88,7 @@ public class BossScript : MonoBehaviour
     {
         isBackingAway = true;
         float timer = 0f;
-
+        PlayerController playerController = player.GetComponent<PlayerController>();
         while (timer < backAwayDuration)
         {
             Vector3 directionAway = (transform.position - player.transform.position).normalized;
@@ -98,7 +98,7 @@ public class BossScript : MonoBehaviour
             timer += Time.deltaTime;
             yield return null;
         }
-
+        playerController.TakeDamage((int)attackDamage);
         // Stop movement and cast
         animator.SetFloat("xVelocity", 0);
         animator.SetTrigger("CastSpell");
@@ -114,8 +114,6 @@ public class BossScript : MonoBehaviour
 
         animator.ResetTrigger("Attack");
         animator.ResetTrigger("CastSpell");
-
-        Debug.Log("Current Attack: " + currentAttack);
 
         if (currentAttack == AttackType.Melee)
         {
@@ -140,7 +138,7 @@ public class BossScript : MonoBehaviour
     public void TakeDamage(int damage)
     {
         if (isBossDead) return;
-        Debug.Log("Boss took damage: " + damage);
+
         health -= damage;
         animator.SetTrigger("Hit");
 
@@ -149,14 +147,28 @@ public class BossScript : MonoBehaviour
             Die();
         }
     }
-
     void Die()
     {
         isBossDead = true;
+        bossDefeated++;
+
         animator.SetTrigger("Die");
         audioManager.playSFX(audioManager.BossDeath);
-        gameObject.SetActive(false);
+
+        GameObject portal = GameObject.Find("Portal");
+        portal?.SetActive(true);
+
         GetComponent<Collider2D>().enabled = false;
+
+        // Tunggu animasi selesai baru nonaktifkan
+        StartCoroutine(DelayedDisable());
+    }
+
+    IEnumerator DelayedDisable()
+    {
+        yield return new WaitForSeconds(2f); // Sesuaikan dengan durasi animasi "Die"
+        gameObject.SetActive(false);
         this.enabled = false;
     }
+
 }

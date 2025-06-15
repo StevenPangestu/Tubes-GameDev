@@ -4,36 +4,47 @@ public class EnemyController : MonoBehaviour
 {
     public static int enemyCount = 0;
     public static int enemiesKilled = 0;
+
     public GameObject bulletPrefab;
     public float moveSpeed = 5f;
     private int health = 3;
+
     public Sprite aimForwardSprite;
     public Sprite aimUpSprite;
     public Sprite aimDownSprite;
+
     private Animator animator;
     private SpriteRenderer spriteRenderer;
-    // Start is called once before the first execution of Update after the MonoBehaviour is created
+    private Transform playerTransform;
+
     void Start()
     {
-
         spriteRenderer = GetComponent<SpriteRenderer>();
-        animator = GetComponent<Animator>(); 
+        animator = GetComponent<Animator>();
+        animator.enabled = false; // Nonaktifkan animator awalnya
+
+        GameObject player = GameObject.FindGameObjectWithTag("Player");
+        if (player != null)
+        {
+            playerTransform = player.transform;
+        }
+
         enemyCount++;
-        InvokeRepeating("EnemyShoot", Random.Range(1f, 5f), Random.Range(1f, 8f)); // Call EnemyShoot every second
+        InvokeRepeating("EnemyShoot", Random.Range(1f, 6f), Random.Range(1f, 6f));
     }
 
-    // Update is called once per frame
     void Update()
     {
-        UpdateAimingAnimation();
+        UpdateAimingSprite();
     }
-    void UpdateAimingAnimation()
+
+    void UpdateAimingSprite()
     {
-      
-        GameObject player = GameObject.FindGameObjectWithTag("Player");
-        if (player == null) return;
+        if (playerTransform == null) return;
+        if (animator != null && animator.GetBool("isDead")) return;
+
         float yTolerance = 1f;
-        float yDifference = player.transform.position.y - transform.position.y;
+        float yDifference = playerTransform.position.y - transform.position.y;
 
         if (yDifference > yTolerance)
         {
@@ -48,8 +59,8 @@ public class EnemyController : MonoBehaviour
             spriteRenderer.sprite = aimForwardSprite;
         }
 
-        // Tambahkan ini jika ingin flip saat musuh menghadap ke kanan atau kiri
-        if (player.transform.position.x > transform.position.x)
+        // Flip arah berdasarkan posisi player
+        if (playerTransform.position.x > transform.position.x)
         {
             transform.localScale = new Vector3(-1.5f, 1.5f, 1);
         }
@@ -57,7 +68,6 @@ public class EnemyController : MonoBehaviour
         {
             transform.localScale = new Vector3(1.5f, 1.5f, 1);
         }
-
     }
 
     void OnDestroy()
@@ -68,43 +78,45 @@ public class EnemyController : MonoBehaviour
             enemiesKilled++;
         }
     }
+
     void EnemyShoot()
     {
-        GameObject player = GameObject.FindGameObjectWithTag("Player");
-        float distanceToPlayer = Vector3.Distance(transform.position, player.transform.position);
-        if (distanceToPlayer > 16f)
-        {
-            return;
-        }
+        if (playerTransform == null) return;
 
-        Vector3 playerPosition = player.transform.position;
-        Vector3 shootDirection = (playerPosition - transform.position).normalized;
+        float distanceToPlayer = Vector3.Distance(transform.position, playerTransform.position);
+        if (distanceToPlayer > 16f) return;
 
+        Vector3 shootDirection = (playerTransform.position - transform.position).normalized;
         Vector3 spawnPosition = transform.position + shootDirection * 1.5f;
 
         GameObject bullet = Instantiate(bulletPrefab, spawnPosition, Quaternion.identity);
-
         EnemyBullet enemyBullet = bullet.GetComponent<EnemyBullet>();
-        //set the animation up
-
 
         if (enemyBullet != null)
         {
+            //audio
+            AudioManager audioManager = FindObjectOfType<AudioManager>();
+            audioManager.playSFX(audioManager.enemyShoot);
             enemyBullet.SetDirection(shootDirection);
         }
+
         bullet.SetActive(true);
     }
+
     public void TakeDamage(int damage)
     {
+        if (animator.GetBool("isDead")) return;
+
         health -= damage;
-        Debug.Log("Enemy took damage, health remaining: " + health);
 
         if (health <= 0)
         {
-            Debug.Log("Enemy is dead");
+            CancelInvoke("EnemyShoot"); // Hentikan tembakan musuh
+            animator.enabled = true;
             animator.SetBool("isDead", true);
+            GetComponent<Collider2D>().enabled = false;
             Destroy(gameObject, 1.25f);
         }
-
     }
+
 }

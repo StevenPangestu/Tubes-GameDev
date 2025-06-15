@@ -6,7 +6,7 @@ public class BarrierController : MonoBehaviour
     [SerializeField] private GameObject barrier2;
     [SerializeField] private GameObject barrier3;
     [SerializeField] private GameObject leftBarrier;
-    [SerializeField] private GameObject rightBarrier;
+
     private bool barrier1Open = false;
     private bool barrier2Open = false;
     private bool barrier3Open = false;
@@ -19,14 +19,14 @@ public class BarrierController : MonoBehaviour
         barrier2.SetActive(true);
         barrier3.SetActive(true);
         leftBarrier.SetActive(true);
-        rightBarrier.SetActive(true);
+      
     }
 
     // Update is called once per frame
     void Update()
     {
         int EnemiesKilled = EnemyController.enemiesKilled;
-
+        Debug.Log("Enemies Killed: " + EnemiesKilled);
         if (EnemiesKilled >= 4 && !barrier1Open)
         {
             // Open barriers based on the number of enemies killed

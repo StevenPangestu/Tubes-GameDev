@@ -2,65 +2,91 @@ using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 using System.Collections;
-
+using UnityEngine.SceneManagement;
 public class GameController : MonoBehaviour
 {
-    private TextMeshProUGUI StageText;
-    private TextMeshProUGUI GrenadeText;
+    [SerializeField] private TextMeshProUGUI StageText;
+    [SerializeField] private TextMeshProUGUI StatusText;
+    [SerializeField] private TextMeshProUGUI GrenadeText;
+
     public Image GrenadeImage;
     public Image[] healthBar;
     public Sprite fullHealthSprite;
     public Sprite emptyHealthSprite;
     public int maxHealth = 5;
+
     private static int currentHealth;
     private static int grenadeOwned;
+
     private BossScript boss;
-    private GameObject portal;
+    public GameObject portal;
+
     [SerializeField] private Button restartButton;
     [SerializeField] private Button exitButton;
     [SerializeField] private CanvasGroup restartCanvasGroup;
     [SerializeField] private CanvasGroup exitCanvasGroup;
-    [SerializeField] private CanvasGroup darkOverlayCanvasGroup; // moved up here
+    [SerializeField] private CanvasGroup darkOverlayCanvasGroup;
     [SerializeField] private float fadeDuration = 0.5f;
     [SerializeField] private GameObject darkOverlay;
 
-    void Start()
+    private void Start()
     {
-        restartButton.gameObject.SetActive(false);
-        exitButton.gameObject.SetActive(false);
-        darkOverlay.SetActive(false);
+        EnemyController.enemiesKilled = 0;
+        ResetUIState();
+        AudioManager audioManager = FindObjectOfType<AudioManager>();
 
+        if (ChangeStage.StageIndex == 0)
+        {
+            audioManager.PlayBGM(audioManager.background1);
+        }
+        else
+        {
+            audioManager.PlayBGM(audioManager.background2);
+        }
         currentHealth = PlayerController.health;
-        StageText = GameObject.Find("TextStage").GetComponent<TextMeshProUGUI>();
-        GrenadeText = GameObject.Find("GrenadeText").GetComponent<TextMeshProUGUI>();
         grenadeOwned = PlayerController.grenadeOwned;
+
+        UpdateHealth(currentHealth);
+        UpdateGrenade(grenadeOwned);
 
         GameObject bossObj = GameObject.FindWithTag("Boss");
         if (bossObj != null)
         {
             boss = bossObj.GetComponent<BossScript>();
+            if (boss == null)
+                Debug.LogError("BossScript component not found on Boss object.");
         }
-        portal = GameObject.Find("Portal");
-
-        UpdateStageText();
-        UpdateHealth(currentHealth);
-        UpdateGrenade(grenadeOwned);
+        else
+        {
+            Debug.LogWarning("Boss object not found in scene.");
+        }
     }
 
-    void Update()
+    private void Update()
     {
-        if (boss != null && portal != null && boss.IsDead())
+        UpdateStageText();
+
+        if (boss != null && boss.IsDead())
         {
             portal.SetActive(true);
         }
-    }
 
+        if (BossScript.bossDefeated == 2)
+        {
+            showWin();
+        }
+    }
 
     public void showFailed()
     {
-        darkOverlay.SetActive(true);
+        if (darkOverlay) darkOverlay.SetActive(true);
+        if (StageText) StageText.text = "";
+        if (StatusText)
+        {
+            StatusText.gameObject.SetActive(true);
+            StatusText.text = "You Failed!";
+        }
 
-        // Enable buttons before fading in their canvas groups
         restartButton.gameObject.SetActive(true);
         exitButton.gameObject.SetActive(true);
 
@@ -68,35 +94,111 @@ public class GameController : MonoBehaviour
         StartCoroutine(FadeIn(restartCanvasGroup));
         StartCoroutine(FadeIn(exitCanvasGroup));
 
-        restartButton.onClick.RemoveAllListeners(); // prevent duplicate listeners
+        restartButton.onClick.RemoveAllListeners();
         restartButton.onClick.AddListener(() =>
         {
-            restartCanvasGroup.interactable = false;
-            restartCanvasGroup.blocksRaycasts = false;
-            darkOverlayCanvasGroup.interactable = false;
-            darkOverlayCanvasGroup.blocksRaycasts = false;
-            // Reset health and grenade count
-            PlayerController.health = 5;
-            PlayerController.grenadeOwned = 0;
-            UpdateHealth(PlayerController.health);
-            UpdateGrenade(PlayerController.grenadeOwned);
-            UnityEngine.SceneManagement.SceneManager.LoadScene(0);
+            ResetAndRestart();
         });
 
-        exitButton.onClick.RemoveAllListeners(); // prevent duplicate listeners
+        exitButton.onClick.RemoveAllListeners();
         exitButton.onClick.AddListener(() =>
         {
+
+            SceneManager.LoadScene(2, LoadSceneMode.Single);
+
+        });
+        //set the player set active to false
+
+
+    }
+
+    public void showWin()
+    {
+        if (darkOverlay) darkOverlay.SetActive(true);
+        if (StageText) StageText.text = "";
+        if (StatusText)
+        {
+            StatusText.gameObject.SetActive(true);
+            StatusText.text = "You WIN!";
+        }
+
+        restartButton.gameObject.SetActive(true);
+        exitButton.gameObject.SetActive(true);
+
+        StartCoroutine(FadeIn(darkOverlayCanvasGroup));
+        StartCoroutine(FadeIn(restartCanvasGroup));
+        StartCoroutine(FadeIn(exitCanvasGroup));
+
+        restartButton.onClick.RemoveAllListeners();
+        restartButton.onClick.AddListener(() =>
+        {
+            ResetAndRestart();
+        });
+
+        exitButton.onClick.RemoveAllListeners();
+        exitButton.onClick.AddListener(() =>
+        {
+
+            SceneManager.LoadScene(2, LoadSceneMode.Single);
+
+        });
+
+        PlayerController playerController = FindObjectOfType<PlayerController>();
+        if (playerController != null)
+        {
+            playerController.gameObject.SetActive(false);
+        }
+    }
+
+    private void ResetUIState()
+    {
+        if (portal) portal.SetActive(false);
+        if (restartButton) restartButton.gameObject.SetActive(false);
+        if (exitButton) exitButton.gameObject.SetActive(false);
+        if (darkOverlay) darkOverlay.SetActive(false);
+        if (StatusText) StatusText.gameObject.SetActive(false);
+
+        if (restartCanvasGroup)
+        {
+            restartCanvasGroup.alpha = 0;
+            restartCanvasGroup.interactable = false;
+            restartCanvasGroup.blocksRaycasts = false;
+        }
+
+        if (exitCanvasGroup)
+        {
+            exitCanvasGroup.alpha = 0;
             exitCanvasGroup.interactable = false;
             exitCanvasGroup.blocksRaycasts = false;
+        }
+
+        if (darkOverlayCanvasGroup)
+        {
+            darkOverlayCanvasGroup.alpha = 0;
             darkOverlayCanvasGroup.interactable = false;
             darkOverlayCanvasGroup.blocksRaycasts = false;
-            Application.Quit();
-        });
+        }
+    }
+
+    private void ResetAndRestart()
+    {
+        BossScript.bossDefeated = 0;
+
+        PlayerController.health = maxHealth;
+        PlayerController.grenadeOwned = 0;
+        UpdateHealth(PlayerController.health);
+        UpdateGrenade(PlayerController.grenadeOwned);
+        ChangeStage.StageIndex = 0;
+        UnityEngine.SceneManagement.SceneManager.LoadScene(0, UnityEngine.SceneManagement.LoadSceneMode.Single);
     }
 
     public void UpdateStageText()
     {
-        StageText.text = "Stage: " + (ChangeStage.StageIndex + 1);
+        if (StageText != null)
+        {
+            Debug.Log("Now stage index: " + ChangeStage.StageIndex);
+            StageText.text = "Stage: " + (ChangeStage.StageIndex + 1);
+        }
     }
 
     public void UpdateHealth(int health)
@@ -110,7 +212,13 @@ public class GameController : MonoBehaviour
 
     public void UpdateGrenade(int grenadeCount)
     {
-        if (grenadeCount == 0)
+        if (GrenadeText == null || GrenadeImage == null)
+        {
+            Debug.LogError("GrenadeText or GrenadeImage is not assigned.");
+            return;
+        }
+
+        if (grenadeCount <= 0)
         {
             GrenadeText.text = "";
             GrenadeImage.enabled = false;

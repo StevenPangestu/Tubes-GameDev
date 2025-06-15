@@ -13,13 +13,10 @@ public class PlayerController : MonoBehaviour
     public Rigidbody2D rb;
     private bool isLookingRight = true;
     // private float leftPosLimit = -20.0f;
-    public static int health = 50;
+    public static int health = 5;
     public static int grenadeOwned = 0;
     private bool isUsingGrenade = false;
-    void Awake()
-    {
-        DontDestroyOnLoad(gameObject);
-    }
+   
     Animator animator;
     void Start()
     {
@@ -35,7 +32,7 @@ public class PlayerController : MonoBehaviour
 
         Vector3 mousePos = Camera.main.ScreenToWorldPoint(Input.mousePosition);
         Vector2 aimDirection = (mousePos - transform.position).normalized;
-        
+
         if (mousePos.x > transform.position.x)
         {
             transform.localScale = new Vector3(0.3f, 0.3f, 1);
@@ -116,11 +113,9 @@ public class PlayerController : MonoBehaviour
         GameController gameController = FindObjectOfType<GameController>();
         health -= damage;
         gameController.UpdateHealth(health);
-        Debug.Log("Player took damage, health remaining: " + health);
 
         if (health <= 0)
         {
-            Debug.Log("Player is dead");
             animator.SetBool("isDead", true);
             Destroy(gameObject, 1f);
             gameController.showFailed();
@@ -133,7 +128,6 @@ public class PlayerController : MonoBehaviour
         {
             health++;
             gameController.UpdateHealth(health);
-            Debug.Log("Player healed, health remaining: " + health);
         }
     }
     void BulletShot()
@@ -154,7 +148,7 @@ public class PlayerController : MonoBehaviour
             // Instantiate grenade
             GameObject grenade = Instantiate(grenadePrefab, spawnPosition, Quaternion.identity);
             //if success in instantiating grenade
-           
+
             grenade.transform.rotation = Quaternion.Euler(0, 0, angle);
             grenade.GetComponent<ThrowBomb>().SetDirection(direction);
             grenade.SetActive(true);
@@ -182,14 +176,19 @@ public class PlayerController : MonoBehaviour
         {
             Heal();
             Destroy(other.gameObject);
+            //audio
+            AudioManager audioManager = FindObjectOfType<AudioManager>();
+            audioManager.playSFX(audioManager.heal);
         }
 
         if (other.gameObject.CompareTag("GrenadeSpawn"))
         {
             grenadeOwned++;
-            GameController gameController = FindObjectOfType<GameController>();
-            gameController.UpdateGrenade(grenadeOwned);
             Destroy(other.gameObject);
+            GameController gameController = FindObjectOfType<GameController>();
+
+            gameController.UpdateGrenade(grenadeOwned);
+
         }
     }
 }
