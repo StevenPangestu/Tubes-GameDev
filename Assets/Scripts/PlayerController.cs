@@ -7,8 +7,22 @@ public class PlayerController : MonoBehaviour
 
     private float horizontalInput;
     private float jumpInput;
+
+    [Header("Movement")]
     public float moveSpeed = 10f;
+    public float acceleration = 30f;
+    public float deceleration = 30f;  
+    private float currentSpeed = 0f;  
+
     public float jumpForce = 15f;
+
+    [Header("Jump - Coyote Time, Buffer, Variable Height")]
+    public float coyoteTime = 0.15f;     
+    public float jumpBufferTime = 0.15f;   
+    public float jumpCutMultiplier = 0.5f; 
+    private float coyoteTimeCounter;
+    private float jumpBufferCounter;
+
     private bool isGrounded = false;
     public Rigidbody2D rb;
     private bool isLookingRight = true;
@@ -16,6 +30,9 @@ public class PlayerController : MonoBehaviour
     public static int health = 5;
     public static int grenadeOwned = 0;
     private bool isUsingGrenade = false;
+
+    [Header("Debug")]
+    public bool showDebugInfo = false;
    
     Animator animator;
     void Start()
@@ -27,7 +44,7 @@ public class PlayerController : MonoBehaviour
 
     void Update()
     {
-        horizontalInput = Input.GetAxis("Horizontal");
+        horizontalInput = Input.GetAxisRaw("Horizontal"); 
         jumpInput = Input.GetAxis("Jump");
 
         Vector3 mousePos = Camera.main.ScreenToWorldPoint(Input.mousePosition);
@@ -84,22 +101,53 @@ public class PlayerController : MonoBehaviour
         }
         animator.SetFloat("yAim", angle);
 
+        // ===== COYOTE TIME =====
+        // Selama masih di ground, counter selalu di-reset.
+        // Begitu lepas dari ground, counter mulai berkurang -> masih ada waktu singkat untuk tetap bisa lompat.
         if (isGrounded)
         {
-            if (jumpInput > 0)
-            {
-                rb.AddForce(Vector2.up * jumpForce, ForceMode2D.Impulse);
-                isGrounded = false;
-                animator.SetBool("isJumping", true);
-            }
-            else
-            {
-                isGrounded = true;
-            }
-
+            coyoteTimeCounter = coyoteTime;
+        }
+        else
+        {
+            coyoteTimeCounter -= Time.deltaTime;
         }
 
-        transform.Translate(Vector2.right * horizontalInput * moveSpeed * Time.deltaTime);
+        // ===== INPUT BUFFERING =====
+        if (Input.GetButtonDown("Jump"))
+        {
+            jumpBufferCounter = jumpBufferTime;
+        }
+        else
+        {
+            jumpBufferCounter -= Time.deltaTime;
+        }
+
+        if (jumpBufferCounter > 0f && coyoteTimeCounter > 0f)
+        {
+            rb.AddForce(Vector2.up * jumpForce, ForceMode2D.Impulse);
+            isGrounded = false;
+            animator.SetBool("isJumping", true);
+
+            // reset biar tidak ter-trigger berulang dari input/coyote yang sama
+            jumpBufferCounter = 0f;
+            coyoteTimeCounter = 0f;
+        }
+
+        // ===== VARIABLE JUMP HEIGHT =====
+        // Kalau tombol lompat dilepas lebih awal saat karakter masih naik, potong kecepatan vertikalnya.
+        // Tekan sebentar = lompatan pendek, tahan = lompatan full.
+        if (Input.GetButtonUp("Jump") && rb.linearVelocity.y > 0f)
+        {
+            rb.linearVelocity = new Vector2(rb.linearVelocity.x, rb.linearVelocity.y * jumpCutMultiplier);
+        }
+
+        // ===== ACCELERATION & DECELERATION =====
+        float targetSpeed = horizontalInput * moveSpeed;
+        float accelRate = (Mathf.Abs(horizontalInput) > 0.01f) ? acceleration : deceleration;
+        currentSpeed = Mathf.MoveTowards(currentSpeed, targetSpeed, accelRate * Time.deltaTime);
+
+        transform.Translate(Vector2.right * currentSpeed * Time.deltaTime);
     }
     private void FixedUpdate()
     {
@@ -190,5 +238,29 @@ public class PlayerController : MonoBehaviour
             gameController.UpdateGrenade(grenadeOwned);
 
         }
+    }
+
+    void OnCollisionExit2D(Collision2D other)
+    {
+        // begitu player benar-benar lepas dari ground (bukan cuma saat melompat).
+        if (other.gameObject.CompareTag("Ground"))
+        {
+            isGrounded = false;
+        }
+    }
+
+    void OnGUI()
+    {
+        if (!showDebugInfo) return;
+
+        GUIStyle style = new GUIStyle();
+        style.fontSize = 18;
+        style.normal.textColor = Color.yellow;
+
+        GUI.Label(new Rect(10, 10, 400, 25), "isGrounded: " + isGrounded, style);
+        GUI.Label(new Rect(10, 35, 400, 25), "coyoteTimeCounter: " + coyoteTimeCounter.ToString("F2"), style);
+        GUI.Label(new Rect(10, 60, 400, 25), "jumpBufferCounter: " + jumpBufferCounter.ToString("F2"), style);
+        GUI.Label(new Rect(10, 85, 400, 25), "currentSpeed: " + currentSpeed.ToString("F2"), style);
+        GUI.Label(new Rect(10, 110, 400, 25), "rb.velocity.y: " + rb.linearVelocity.y.ToString("F2"), style);
     }
 }
