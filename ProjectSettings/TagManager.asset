@@ -18,6 +18,7 @@ TagManager:
   - GrenadeSpawn
   - Boss
   - StatusText
+  - PlayerSpawn
   layers:
   - Default
   - TransparentFX
