@@ -25,7 +25,7 @@ public class BarrierController : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        int EnemiesKilled = EnemyController.enemiesKilled;
+        int EnemiesKilled = EnemyFSMController.enemiesKilled;
         Debug.Log("Enemies Killed: " + EnemiesKilled);
         if (EnemiesKilled >= 4 && !barrier1Open)
         {

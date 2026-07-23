@@ -14,6 +14,7 @@ GameObject:
   - component: {fileID: 1714039847056203979}
   - component: {fileID: 2929490064889411211}
   - component: {fileID: -5558902741825571623}
+  - component: {fileID: 8418343919896153788}
   m_Layer: 0
   m_Name: Enemy
   m_TagString: Enemy
@@ -163,7 +164,7 @@ Rigidbody2D:
   m_Interpolate: 0
   m_SleepingMode: 1
   m_CollisionDetection: 0
-  m_Constraints: 7
+  m_Constraints: 2
 --- !u!114 &2929490064889411211
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -171,7 +172,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 8225670502755749363}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: b8c52e6872c22d64c954a976baac8af3, type: 3}
   m_Name: 
@@ -203,3 +204,31 @@ Animator:
   m_AllowConstantClipSamplingOptimization: 1
   m_KeepAnimatorStateOnDisable: 0
   m_WriteDefaultValuesOnDisable: 0
+--- !u!114 &8418343919896153788
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8225670502755749363}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bff86cc89c54ee54485519f36cf10f0a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  bulletPrefab: {fileID: 6037585842597138104, guid: 4d6a16a5f88e7d849bf7135779795e35, type: 3}
+  maxHealth: 3
+  detectRange: 16
+  shootCooldownMin: 1
+  shootCooldownMax: 3
+  enablePatrol: 1
+  patrolSpeed: 1.5
+  patrolRange: 2
+  aimForwardSprite: {fileID: -3003089909205974387, guid: b496cfd31aaf0b5488694b3a952a72a5, type: 3}
+  aimUpSprite: {fileID: -4283553580610408406, guid: 2a8603b599d7ecb4d9e96cef047e17b5, type: 3}
+  aimDownSprite: {fileID: 4206021522767181908, guid: 6d467f2e790f5104bb4eaea16b1ef115, type: 3}
+  health: 0
+  animator: {fileID: 0}
+  spriteRenderer: {fileID: 0}
+  playerTransform: {fileID: 0}
+  isDead: 0

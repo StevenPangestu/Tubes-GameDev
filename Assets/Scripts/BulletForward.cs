@@ -61,8 +61,8 @@ public class BulletForward : MonoBehaviour
         if (!isHit && other.gameObject.CompareTag("Enemy"))
         {
             TriggerHit();
-            EnemyController enemyController = other.gameObject.GetComponent<EnemyController>();
-            enemyController.TakeDamage(1);
+            EnemyFSMController enemyController = other.gameObject.GetComponent<EnemyFSMController>();
+            if (enemyController != null) enemyController.TakeDamage(1);
         }
         else if (!isHit && other.gameObject.CompareTag("Barrier"))
         {
