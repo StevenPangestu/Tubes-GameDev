@@ -37,7 +37,7 @@ public class PlayerController : MonoBehaviour
     Animator animator;
     void Start()
     {
-        //set player spawn at gameobject with tag "PlayerSpawn"
+        //set player spawn at gameobject with tag "PlayerSpawn"zz
         GameObject spawnPoint = GameObject.FindGameObjectWithTag("PlayerSpawn");
         if (spawnPoint != null)
         {
