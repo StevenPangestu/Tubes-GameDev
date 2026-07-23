@@ -74,7 +74,7 @@ public class ThrowBomb : MonoBehaviour
         {
             if (col.CompareTag("Enemy"))
             {
-                EnemyController ec = col.GetComponent<EnemyController>();
+                EnemyFSMController ec = col.GetComponent<EnemyFSMController>();
                 if (ec != null)
                 {
                     ec.TakeDamage(damage);

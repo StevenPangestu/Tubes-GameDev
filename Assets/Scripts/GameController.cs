@@ -31,7 +31,7 @@ public class GameController : MonoBehaviour
 
     private void Start()
     {
-        EnemyController.enemiesKilled = 0;
+        EnemyFSMController.enemiesKilled = 0;
         ResetUIState();
         AudioManager audioManager = FindObjectOfType<AudioManager>();
 
