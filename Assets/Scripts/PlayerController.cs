@@ -37,6 +37,10 @@ public class PlayerController : MonoBehaviour
     Animator animator;
     void Start()
     {
+        //set the spawn position of the player to the spawn point
+        GameObject spawnPoint = GameObject.FindGameObjectWithTag("PlayerSpawn");
+        transform.position = spawnPoint.transform.position;
+        
         bulletPrefab.SetActive(false);
         //grenadePrefab.SetActive(false);
         animator = GetComponent<Animator>();
