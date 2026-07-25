@@ -164,7 +164,7 @@ Rigidbody2D:
   m_Interpolate: 0
   m_SleepingMode: 1
   m_CollisionDetection: 0
-  m_Constraints: 2
+  m_Constraints: 6
 --- !u!114 &2929490064889411211
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -232,3 +232,5 @@ MonoBehaviour:
   spriteRenderer: {fileID: 0}
   playerTransform: {fileID: 0}
   isDead: 0
+  facingMode: 0
+  patrolFacingDirection: 1

@@ -1,7 +1,5 @@
 using UnityEngine;
 
-// Kalau enablePatrol=false: musuh diam total, cuma nunggu player masuk detectRange (perilaku lama).
-// Kalau enablePatrol=true: musuh jalan bolak-balik di sekitar titik spawn selagi nunggu.
 public class EnemyIdleState : IState
 {
     private readonly EnemyFSMController enemy;
@@ -16,6 +14,11 @@ public class EnemyIdleState : IState
     public void Enter()
     {
         spawnPosition = enemy.transform.position;
+
+            enemy.facingMode = enemy.enablePatrol
+            ? EnemyFSMController.FacingMode.Patrol
+            : EnemyFSMController.FacingMode.Player;
+        enemy.patrolFacingDirection = patrolDirection;
     }
 
     public void Tick()
@@ -35,11 +38,15 @@ public class EnemyIdleState : IState
 
     private void Patrol()
     {
-        float newX = enemy.GetX() + patrolDirection * enemy.patrolSpeed * Time.deltaTime;
+        float currentX = enemy.GetX();
 
-        if (newX > spawnPosition.x + enemy.patrolRange) patrolDirection = -1;
-        else if (newX < spawnPosition.x - enemy.patrolRange) patrolDirection = 1;
+        // Cek posisi SEKARANG dulu terhadap batas, baru tentukan arah -> gak kebablasan lewat batas.
+        if (currentX >= spawnPosition.x + enemy.patrolRange) patrolDirection = -1;
+        else if (currentX <= spawnPosition.x - enemy.patrolRange) patrolDirection = 1;
 
+        float newX = currentX + patrolDirection * enemy.patrolSpeed * Time.deltaTime;
+
+        enemy.patrolFacingDirection = patrolDirection;
         enemy.MoveHorizontalTo(newX);
     }
 }
@@ -61,6 +68,9 @@ public class EnemyAttackState : IState
     {
         timer = 0f;
         PickNextShootDelay();
+
+        // Pas nyerang, sprite tetap ngadep player kayak semula.
+        enemy.facingMode = EnemyFSMController.FacingMode.Player;
     }
 
     public void Tick()
