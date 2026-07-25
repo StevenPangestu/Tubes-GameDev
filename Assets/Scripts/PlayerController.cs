@@ -33,7 +33,7 @@ public class PlayerController : MonoBehaviour
 
     [Header("Debug")]
     public bool showDebugInfo = false;
-   
+    static float shootCooldown = 0f;
     Animator animator;
     void Start()
     {
@@ -64,11 +64,17 @@ public class PlayerController : MonoBehaviour
             transform.localScale = new Vector3(-0.3f, 0.3f, 1);
             isLookingRight = false;
         }
-        if (Input.GetMouseButtonDown(0))
+
+        //make player shoot cooldown for 0.3 seconds
+        
+        shootCooldown -= Time.deltaTime;
+
+        if (Input.GetMouseButtonDown(0) && shootCooldown <= 0f)
         {
             BulletShot();
             AudioManager audioManager = FindObjectOfType<AudioManager>();
             audioManager.playSFX(audioManager.shoot);
+            shootCooldown = 0.3f;
         }
 
 
