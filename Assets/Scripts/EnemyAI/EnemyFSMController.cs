@@ -1,11 +1,5 @@
 using UnityEngine;
 
-// Pengganti EnemyController.cs. Otak musuh sekarang FSM eksplisit:
-// Idle/Patrol -> Attack -> Dead
-//
-// Default-nya musuh DIAM di tempat (persis perilaku lama).
-// Centang "Enable Patrol" di Inspector kalau mau musuh ini jalan
-// bolak-balik di sekitar titik spawn-nya selama belum lihat player.
 public class EnemyFSMController : MonoBehaviour
 {
     public static int enemyCount = 0;
@@ -33,6 +27,12 @@ public class EnemyFSMController : MonoBehaviour
     [HideInInspector] public SpriteRenderer spriteRenderer;
     [HideInInspector] public Transform playerTransform;
     [HideInInspector] public bool isDead;
+
+    // Menentukan sumber arah hadap sprite:
+    // Patrol = ikut arah jalan patroli, Player = ikut posisi player (perilaku lama, dipakai saat Attack)
+    public enum FacingMode { Player, Patrol }
+    [HideInInspector] public FacingMode facingMode = FacingMode.Player;
+    [HideInInspector] public int patrolFacingDirection = 1; // 1 = jalan/hadap kanan, -1 = jalan/hadap kiri
 
     private Rigidbody2D rb;
     private StateMachine stateMachine;
@@ -79,7 +79,7 @@ public class EnemyFSMController : MonoBehaviour
         }
     }
 
-    // ===== Dipanggil oleh state-state di EnemyStates.cs =====
+    // ===== Dipanggil oleh state-state di EnemyStates =====
 
     public float DistanceToPlayer()
     {
@@ -92,9 +92,6 @@ public class EnemyFSMController : MonoBehaviour
         return rb != null ? rb.position.x : transform.position.x;
     }
 
-    // Gerak horizontal yang aman dipakai bareng Rigidbody2D.
-    // Kalau ada Rigidbody2D, pakai MovePosition supaya gak tabrakan/ketimpa physics step.
-    // Kalau gak ada Rigidbody2D, fallback set transform langsung (untuk musuh tanpa fisik).
     public void MoveHorizontalTo(float targetX)
     {
         if (rb != null)
@@ -133,8 +130,6 @@ public class EnemyFSMController : MonoBehaviour
         bullet.SetActive(true);
     }
 
-    // ===== Sisa logika asli, tidak berubah =====
-
     void UpdateFacingAndAim()
     {
         if (playerTransform == null || isDead) return;
@@ -146,9 +141,19 @@ public class EnemyFSMController : MonoBehaviour
         else if (yDifference < -yTolerance) spriteRenderer.sprite = aimDownSprite;
         else spriteRenderer.sprite = aimForwardSprite;
 
-        transform.localScale = new Vector3(
-            playerTransform.position.x > transform.position.x ? -1.5f : 1.5f,
-            1.5f, 1);
+        float flipX;
+        if (facingMode == FacingMode.Patrol)
+        {
+            // Ikut arah jalan patroli: patrolFacingDirection > 0 (kanan) -> sprite di-flip ngadep kanan
+            flipX = patrolFacingDirection > 0 ? -1.5f : 1.5f;
+        }
+        else
+        {
+            // Perilaku lama: ngadep ke arah player
+            flipX = playerTransform.position.x > transform.position.x ? -1.5f : 1.5f;
+        }
+
+        transform.localScale = new Vector3(flipX, 1.5f, 1);
     }
 
     public void TakeDamage(int damage)
