@@ -27,7 +27,7 @@ public class PlayerController : MonoBehaviour
     public Rigidbody2D rb;
     private bool isLookingRight = true;
     // private float leftPosLimit = -20.0f;
-    public static int health = 500;
+    public static int health = 5;
     public static int grenadeOwned = 0;
     private bool isUsingGrenade = false;
 
@@ -74,7 +74,7 @@ public class PlayerController : MonoBehaviour
             BulletShot();
             AudioManager audioManager = FindObjectOfType<AudioManager>();
             audioManager.playSFX(audioManager.shoot);
-            shootCooldown = 0.3f;
+            shootCooldown = 0.2f;
         }
 
 
